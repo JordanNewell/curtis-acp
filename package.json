@@ -1,0 +1,33 @@
+{
+	"name": "curtis-acp",
+	"version": "0.4.0",
+	"description": "Curtis AI as an ACP agent — polyglot LLM access (53 providers) with the multi-model arena, inside Zed and any ACP client.",
+	"type": "module",
+	"main": "dist/index.js",
+	"bin": {
+		"curtis-acp": "dist/index.js"
+	},
+	"files": [
+		"dist",
+		"README.md"
+	],
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"dev": "tsx src/index.ts",
+		"prepublishOnly": "npm run build && npm run test:mock",
+		"test:mock": "node test/client.mjs"
+	},
+	"keywords": ["acp", "agent-client-protocol", "zed", "llm", "arena", "byok"],
+	"license": "MIT",
+	"dependencies": {
+		"@zed-industries/agent-client-protocol": "^0.4.5"
+	},
+	"devDependencies": {
+		"@types/node": "^20.11.0",
+		"tsx": "^4.19.0",
+		"typescript": "^5.6.0"
+	}
+}

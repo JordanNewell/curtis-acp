@@ -1,0 +1,18 @@
+{
+	"id": "curtis",
+	"name": "Curtis",
+	"version": "0.4.0",
+	"description": "Polyglot BYOK LLM chat with the multi-model arena — one prompt, every model, side by side. 53 providers via OpenAI-compatible + Anthropic APIs; Ollama and LM Studio need no key.",
+	"repository": "https://github.com/JordanNewell/curtis-acp",
+	"website": "https://jordannewell.com/curtis",
+	"authors": ["Jordan Newell"],
+	"license": "MIT",
+	"license_url": "https://github.com/JordanNewell/curtis-acp/blob/main/LICENSE",
+	"icon": "icon.svg",
+	"distribution": {
+		"npx": {
+			"package": "curtis-acp",
+			"args": []
+		}
+	}
+}
