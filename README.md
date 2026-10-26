@@ -81,6 +81,10 @@ ACP streams one linear message, so the arena works in two beats: progress goes t
 
 Done recently: hosted live pass (Z.ai GLM-5.3 single turn + 2-column arena through the vendored transport; five more providers' failure paths exercised live against placeholder keys), per-provider sampling overrides (`CURTIS_<PROVIDER>_*` — the plugin's three-layer resolution ported to env, `EXTRA_BODY` passthrough included), real token counts + cost estimates in the arena table, env sampling + reasoning-effort knobs (per-provider dialects via the vendored `getReasoningWire`), npm publish readiness, full 53-provider layer vendored from the plugin, native mode/model picker, per-column cancel semantics, `session/load` resume, conversation history, promote/clear commands.
 
+## License
+
+[BUSL 1.1](LICENSE) — same as [curtis](https://github.com/JordanNewell/curtis); converts to Apache 2.0 four years after each version's first public distribution. The provider layer is vendored from curtis@2.0.0, so the license travels with it. Personal and internal business use is unrestricted; the only restriction is productizing a Curtis substitute.
+
 ## Layout
 
 ```
