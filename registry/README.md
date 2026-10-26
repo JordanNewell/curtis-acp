@@ -7,11 +7,13 @@
 
 ## Before the PR
 
-- [ ] Publish to npm as `curtis-acp` (`npm publish`) — the registry installs via `npx`, so the package must exist and match `version`.
-- [ ] Create the GitHub repo `JordanNewell/curtis-acp` (owner resolved in `agent.json`; registry validates that `repository` and `license_url` resolve — `license_url` points at this repo's LICENSE).
-- [ ] Confirm `website` (or drop the field if there is no Curtis page yet).
-- [x] Optional: add `icon` — SVG, exactly 16×16, square (`icon.svg`, arena-columns mark in the brand greens). Verify the registry's expected icon field format (inline URL vs repo-relative path) against their CONTRIBUTING.md when assembling the PR.
-- [ ] Sanity-check the auth requirement: the registry only lists agents that return valid `authMethods` in the handshake. curtis-acp declares the `env-keys` method (verified in `test/client.mjs`); re-check the registry's CONTRIBUTING.md for their exact CI expectations before submitting.
+- [ ] Publish to npm as `curtis-acp` (`npm publish --otp=<code>` — the account has 2FA) — the registry installs via `npx`, so the package must exist and match `version`.
+- [x] Create the GitHub repo `JordanNewell/curtis-acp` (both `repository` and `license_url` resolve — verified 200).
+- [x] Confirm `website` — `https://jordannewell.com/curtis` resolves (308 → 200 on the trailing slash; registry validators follow redirects).
+- [x] Optional: add `icon` — done per CONTRIBUTING: 16×16 SVG, monochrome `currentColor` only (hardcoded hex fills fail validation), sitting as `icon.svg` next to `agent.json`; the registry build generates the `icon` URL itself. `agent.json` validated **VALID** against their `agent.schema.json` (draft-07).
+- [x] Sanity-check the auth requirement: `initialize` returns one valid `authMethods` entry (`env-keys` — verified in `test/client.mjs`).
+
+**PR state:** branch `add-curtis` pushed to the fork (`JordanNewell/registry`) with `curtis/agent.json` + `curtis/icon.svg` — open the PR against `agentclientprotocol/registry` once the npm package exists (their CI installs the `npx` target).
 
 ## After merge
 

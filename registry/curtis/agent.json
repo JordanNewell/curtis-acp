@@ -8,7 +8,6 @@
 	"authors": ["Jordan Newell"],
 	"license": "MIT",
 	"license_url": "https://github.com/JordanNewell/curtis-acp/blob/main/LICENSE",
-	"icon": "icon.svg",
 	"distribution": {
 		"npx": {
 			"package": "curtis-acp",
