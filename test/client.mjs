@@ -10,6 +10,13 @@
 // Usage: npm run build && npm run test:mock
 
 import { spawn } from "node:child_process";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+// Sessions persist to disk now — point the suite at a throwaway dir so tests
+// never read or write the user's real ~/.curtis-acp state.
+const SESSION_DIR = mkdtempSync(join(tmpdir(), "curtis-test-sessions-"));
 
 const child = spawn(process.execPath, ["dist/index.js"], {
 	env: {
@@ -17,6 +24,7 @@ const child = spawn(process.execPath, ["dist/index.js"], {
 		CURTIS_MOCK: "1",
 		CURTIS_MOCK_DELAY: "60",
 		CURTIS_TIMEOUT_MS: "10000",
+		CURTIS_SESSION_DIR: SESSION_DIR,
 		// keyless local providers double as mock duelists; "fail" triggers the
 		// deterministic mock failure so the arena error path gets exercised
 		CURTIS_ARENA: "ollama:mock-a,lmstudio:mock-b-fail",
@@ -236,6 +244,7 @@ async function timeoutBudgetTest() {
 			CURTIS_MOCK: "1",
 			CURTIS_MOCK_DELAY: "500",
 			CURTIS_TIMEOUT_MS: "40",
+			CURTIS_SESSION_DIR: SESSION_DIR,
 			CURTIS_ARENA: "ollama:mock-a",
 		},
 		stdio: ["pipe", "pipe", "inherit"],

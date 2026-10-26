@@ -17,8 +17,9 @@
 	"scripts": {
 		"build": "tsc -p tsconfig.json",
 		"dev": "tsx src/index.ts",
-		"prepublishOnly": "npm run build && npm run test:mock",
-		"test:mock": "node test/client.mjs"
+		"prepublishOnly": "npm run build && npm run test:mock && npm run test:persist",
+		"test:mock": "node test/client.mjs",
+		"test:persist": "node test/persist.mjs"
 	},
 	"keywords": ["acp", "agent-client-protocol", "zed", "llm", "arena", "byok"],
 	"license": "BUSL-1.1",
