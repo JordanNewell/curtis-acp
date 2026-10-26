@@ -7,7 +7,7 @@
 
 ## Before the PR
 
-- [x] Publish to npm as `curtis-acp` — done: **0.4.0 live** (web-auth OTP flow; tarball shasum `2bcaaca…` verified, handshake re-tested against the published artifact). **0.4.1** re-licenses the package MIT → BUSL-1.1 (matching curtis) — publish pending the 2FA flow.
+- [x] Publish to npm as `curtis-acp` — done: **0.4.0 and 0.4.1 live** (web-auth OTP flow; 0.4.1 is BUSL-1.1, handshake re-tested against the published artifact each release).
 - [x] Create the GitHub repo `JordanNewell/curtis-acp` (both `repository` and `license_url` resolve — verified 200).
 - [x] Confirm `website` — `https://jordannewell.com/curtis` resolves (308 → 200 on the trailing slash; registry validators follow redirects).
 - [x] Optional: add `icon` — done per CONTRIBUTING: 16×16 SVG, monochrome `currentColor` only (hardcoded hex fills fail validation), sitting as `icon.svg` next to `agent.json`; the registry build generates the `icon` URL itself. `agent.json` validated **VALID** against their `agent.schema.json` (draft-07).

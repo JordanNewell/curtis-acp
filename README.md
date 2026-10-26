@@ -8,19 +8,19 @@ One prompt, every model, side by side — the thing no editor ships natively. Ze
 
 The provider layer is **vendored from curtis-ai-chat@2.0.0** (`scripts/vendor-sync.mjs` re-syncs it; the only sanctioned edits are the Node shim specifier and explicit `.js` import extensions). That brings the plugin's researched per-provider parameter matrix — which sampling knobs each API accepts, so strict providers get fields dropped instead of 400s — plus curated, price-verified model seeds and runtime `/models` discovery.
 
-Self-tested (`npm run test:mock` — 13 protocol checks over stdio: handshake, arena with a failing column, promote-to-single, multi-turn history, `/clear`, mode/model switch, streaming, mid-turn cancel with partial arena composed, session/load replay, single-mode timeout) and **live-validated** against real providers (Ollama single turn + 2-column arena through the vendored transport).
+Self-tested (`npm run test:mock` — 13 protocol checks over stdio: handshake, arena with a failing column, promote-to-single, multi-turn history, `/clear`, mode/model switch, streaming, mid-turn cancel with partial arena composed, session/load replay, single-mode timeout; `npm run test:persist` — transcript replay + grounded follow-up across an agent restart) and **live-validated** against real providers (hosted single turn + 2-column arena through the vendored transport).
 
 ## Try it in Zed
 
-Build, then add a custom agent in Zed (`agent_servers` in settings.json — Agent Settings → External Agents → Add Custom Agent). Setting two keys is enough — every keyed provider's flagship arenas automatically:
+Add a custom agent in Zed (`agent_servers` in settings.json — Agent Settings → External Agents → Add Custom Agent). Setting two keys is enough — every keyed provider's flagship arenas automatically:
 
 ```json
 {
 	"agent_servers": {
 		"curtis": {
 			"type": "custom",
-			"command": "node",
-			"args": ["E:\\dev\\projects\\curtis-ai-chat-zed\\dist\\index.js"],
+			"command": "npx",
+			"args": ["-y", "curtis-acp@0.4.1"],
 			"env": {
 				"ANTHROPIC_API_KEY": "sk-ant-…",
 				"GEMINI_API_KEY": "AIza…"
@@ -29,6 +29,8 @@ Build, then add a custom agent in Zed (`agent_servers` in settings.json — Agen
 	}
 }
 ```
+
+From source instead: `git clone https://github.com/JordanNewell/curtis-acp && npm install && npm run build`, then `"command": "node", "args": ["<repo>/dist/index.js"]`.
 
 Or pick the duel explicitly with `CURTIS_ARENA`:
 
@@ -59,8 +61,8 @@ Not available headlessly: ChatGPT sign-in (OAuth lives in the plugin's Electron 
 
 ### Slash commands (in the agent panel)
 
-- `/arena <prompt>` — force the arena (default when ≥2 models are configured: plain prompts arena automatically)
-- `/single <prompt>` — plain live-streamed answer from the selected model
+- `/arena <prompt>` — force the arena (default when ≥2 models are configured: plain prompts arena automatically; bare `/arena` lists the models)
+- `/single <prompt>` — plain live-streamed answer from the selected model (`/ask` is an alias)
 - `/promote <n>` — after an arena, make column *n* the single-mode model (`/promote` alone lists the ranking). The panel's mode switcher follows along.
 - `/models` — list configured models
 - `/clear` — wipe this session's conversation history
@@ -69,17 +71,19 @@ Not available headlessly: ChatGPT sign-in (OAuth lives in the plugin's Electron 
 
 Sessions keep a transcript (last 16 messages). Follow-ups in Single mode see your previous turns; after an arena, follow-ups are grounded in a compact per-column digest, so *"expand on the Gemini answer"* works. Arena turns store the digest, not the full columns, to keep context lean.
 
+Sessions persist to disk (`~/.curtis-acp/sessions`, override with `CURTIS_SESSION_DIR`), so `session/load` — and therefore reopening a Zed thread — survives agent restarts. New session ids skip any persisted id so a restarted process can't collide with a client-remembered thread.
+
 ## How the arena renders
 
 ACP streams one linear message, so the arena works in two beats: progress goes to the thought stream (`· OpenRouter · …: 240 chars`), then the composed message lands — a results table (first-token latency, total time, provider-reported tokens, seed-price cost estimate) followed by every full response under its own heading, fastest first. Cancelling mid-arena keeps the table: finished columns stay, in-flight ones are marked cancelled. Each request — column or single — runs under its own `CURTIS_TIMEOUT_MS` budget, so a hung provider can never stall the panel.
 
 ## Roadmap
 
-- npm publish + ACP Registry listing (`registry/` scaffold filled in — LICENSE + 16×16 icon added, `OWNER` resolved to JordanNewell; the URLs resolve once the GitHub repo exists, then `npm publish` and the registry PR)
+- ACP Registry listing merge — the entry is submitted (`registry/curtis/agent.json`, monochrome icon; npm package `curtis-acp` is live, PR [#721](https://github.com/agentclientprotocol/registry/pull/721) open)
 - OS keychain for keys (env vars today; the plugin's secretStorage seam is the shape to follow)
 - Per-column `/stop` from the client mid-arena (needs an ACP extension — today, turn-cancel composes whatever finished)
 
-Done recently: hosted live pass (Z.ai GLM-5.3 single turn + 2-column arena through the vendored transport; five more providers' failure paths exercised live against placeholder keys), per-provider sampling overrides (`CURTIS_<PROVIDER>_*` — the plugin's three-layer resolution ported to env, `EXTRA_BODY` passthrough included), real token counts + cost estimates in the arena table, env sampling + reasoning-effort knobs (per-provider dialects via the vendored `getReasoningWire`), npm publish readiness, full 53-provider layer vendored from the plugin, native mode/model picker, per-column cancel semantics, `session/load` resume, conversation history, promote/clear commands.
+Done recently: published `curtis-acp@0.4.0` → `0.4.1` on npm and opened the ACP Registry PR, hosted live pass (Z.ai GLM-5.3 single turn + 2-column arena through the vendored transport; five more providers' failure paths exercised live against placeholder keys), per-provider sampling overrides (`CURTIS_<PROVIDER>_*` — the plugin's three-layer resolution ported to env, `EXTRA_BODY` passthrough included), real token counts + cost estimates in the arena table, env sampling + reasoning-effort knobs (per-provider dialects via the vendored `getReasoningWire`), full 53-provider layer vendored from the plugin, native mode/model picker, per-column cancel semantics, `session/load` resume, conversation history, promote/clear commands.
 
 ## License
 

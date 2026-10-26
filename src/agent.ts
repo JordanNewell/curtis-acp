@@ -24,6 +24,7 @@ import { runTurn, rankArena } from "./arena.js";
 import type { ColumnResult, TurnMode } from "./arena.js";
 import { availableModels } from "./config.js";
 import type { ChatMessage } from "./chat.js";
+import { loadSession as loadPersistedSession, persistedSessionIds, saveSession } from "./persist.js";
 
 // Follow-up context window: last N messages (kept in user/assistant pairs so
 // the transcript never dangles).
@@ -74,7 +75,12 @@ export class CurtisAgent implements Agent {
 	async authenticate(_params: AuthenticateRequest): Promise<void> {}
 
 	async newSession(_params: NewSessionRequest): Promise<NewSessionResponse> {
-		const sessionId = `curtis-${++this.nextId}`;
+		// Skip ids a previous process already persisted — the client remembers
+		// those threads, so a collision would hand two ids one history.
+		const taken = persistedSessionIds();
+		let n = ++this.nextId;
+		while (taken.has(`curtis-${n}`)) n = ++this.nextId;
+		const sessionId = `curtis-${n}`;
 		const session: Session = {
 			abort: new AbortController(),
 			mode: "arena",
@@ -93,8 +99,21 @@ export class CurtisAgent implements Agent {
 	}
 
 	async loadSession(params: LoadSessionRequest): Promise<LoadSessionResponse> {
-		const session = this.sessions.get(params.sessionId);
-		if (!session) throw new Error(`unknown session: ${params.sessionId}`);
+		let session = this.sessions.get(params.sessionId);
+		if (!session) {
+			// Not from this process lifetime — hydrate from disk so threads
+			// survive agent restarts.
+			const saved = loadPersistedSession(params.sessionId);
+			if (!saved) throw new Error(`unknown session: ${params.sessionId}`);
+			session = {
+				abort: new AbortController(),
+				mode: saved.mode,
+				modelId: saved.modelId,
+				history: saved.history,
+				lastArena: saved.lastArena as ColumnResult[],
+			};
+			this.sessions.set(params.sessionId, session);
+		}
 
 		await this.advertiseCommands(params.sessionId);
 		// Replay the transcript so the client rebuilds the thread it remembers.
@@ -156,16 +175,31 @@ export class CurtisAgent implements Agent {
 		}
 	}
 
+	/** State changed — best-effort write-through so a restarted process can
+	 *  resume the thread (disk errors only warn; the agent keeps serving). */
+	private persist(sessionId: string, session: Session): void {
+		saveSession(sessionId, {
+			mode: session.mode,
+			modelId: session.modelId,
+			history: session.history,
+			lastArena: session.lastArena,
+		});
+	}
+
 	async setSessionMode(params: SetSessionModeRequest): Promise<void> {
 		const session = this.sessions.get(params.sessionId);
 		if (session && (params.modeId === "arena" || params.modeId === "single")) {
 			session.mode = params.modeId;
+			this.persist(params.sessionId, session);
 		}
 	}
 
 	async setSessionModel(params: SetSessionModelRequest): Promise<void> {
 		const session = this.sessions.get(params.sessionId);
-		if (session) session.modelId = params.modelId;
+		if (session) {
+			session.modelId = params.modelId;
+			this.persist(params.sessionId, session);
+		}
 	}
 
 	async prompt(params: PromptRequest): Promise<PromptResponse> {
@@ -187,11 +221,13 @@ export class CurtisAgent implements Agent {
 		const lower = text.toLowerCase();
 		if (lower === "/clear") {
 			session.history = [];
+			this.persist(sessionId, session);
 			await this.finish(sessionId, "Conversation history cleared — the next prompt starts fresh.");
 			return { stopReason: "end_turn" };
 		}
 		if (lower === "/promote" || lower.startsWith("/promote ")) {
 			await this.finish(sessionId, promoteMessage(text, session));
+			this.persist(sessionId, session);
 			if (session.mode === "single" && session.modelId) {
 				// keep the client's mode switcher in sync with the promotion
 				await this.conn.sessionUpdate({
@@ -236,6 +272,7 @@ export class CurtisAgent implements Agent {
 				while (session.history.length > MAX_HISTORY_MESSAGES) session.history.splice(0, 2);
 			}
 			if (result.arenaRanked) session.lastArena = result.arenaRanked;
+			this.persist(sessionId, session);
 		} catch (e) {
 			await lastWrite;
 			const detail = e instanceof Error ? e.message : String(e);

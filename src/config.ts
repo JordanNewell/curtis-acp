@@ -107,10 +107,9 @@ export function availableModels(): ModelRef[] {
 	if (!mockMode && !process.env.CURTIS_ARENA) {
 		return runnableDefinitions()
 			.map((def) => {
-				// Keyless locals have empty seed lists — their catalog comes from
-				// startup discovery, which populates the provider instance.
-				const models =
-					def.authType === "none" ? (getProvider(def.id)?.models ?? []) : def.models;
+				// Prefer the live instance catalog (discovery-populated; locals
+				// have empty seeds); the static seed list is the fallback.
+				const models = getProvider(def.id)?.models ?? def.models;
 				return { providerId: def.id, providerLabel: def.name, modelId: models[0]?.id ?? "" };
 			})
 			.filter((ref) => ref.modelId !== "");
@@ -243,10 +242,12 @@ export function estimateCost(
 }
 
 // ---------------------------------------------------------------------------
-// Registry bootstrap — one ProviderRegistry over env-derived configs. Only
-// the keyless local runtimes get model discovery (localhost /api-tags, fast,
-// and needed because their seed lists are empty); cloud providers arena by
-// seed/extra models, so discovery is pure startup latency there.
+// Registry bootstrap — one ProviderRegistry over env-derived configs. Discovery
+// fills real model catalogs everywhere the provider exposes /models: keyless
+// locals need it (their seed lists are empty) and keyed clouds benefit (seed
+// lists are curated fallbacks, e.g. Anthropic's is a single entry) — discovery
+// also enriches per-model pricing for the arena's cost cells. Bounded by the
+// bootstrap cap in index.ts; a failed key or hung endpoint degrades to seeds.
 // ---------------------------------------------------------------------------
 
 let registry: ProviderRegistry | undefined;
@@ -262,13 +263,10 @@ export const ready: Promise<void> = (async () => {
 	for (const def of runnableDefinitions()) {
 		registry.updateConfig(def.id, configs[def.id]);
 	}
-	// Discovery populates the locals' real model catalogs; cloud lists would
-	// only enrich metadata the arena never shows.
-	for (const def of runnableDefinitions()) {
-		if (def.authType === "none" && def.autoDiscoverModels) {
-			await registry.discoverModels(def);
-		}
-	}
+	const discoveries = runnableDefinitions()
+		.filter((def) => def.autoDiscoverModels)
+		.map((def) => registry!.discoverModels(def));
+	await Promise.allSettled(discoveries);
 })();
 
 export function getProvider(providerId: string) {
