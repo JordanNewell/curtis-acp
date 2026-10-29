@@ -23,6 +23,9 @@
 	},
 	"keywords": ["acp", "agent-client-protocol", "zed", "llm", "arena", "byok"],
 	"license": "BUSL-1.1",
+	"overrides": {
+		"zod": "^4.6.6"
+	},
 	"dependencies": {
 		"@zed-industries/agent-client-protocol": "^0.4.5"
 	},
