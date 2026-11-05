@@ -1,7 +1,16 @@
 {
 	"name": "curtis-acp",
-	"version": "0.4.1",
+	"version": "0.4.2",
 	"description": "Curtis AI as an ACP agent — polyglot LLM access (53 providers) with the multi-model arena, inside Zed and any ACP client.",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/JordanNewell/curtis-acp.git"
+	},
+	"homepage": "https://jordannewell.com/curtis",
+	"author": "Jordan Newell <jordan@jordannewell.com> (https://jordannewell.com)",
+	"bugs": {
+		"url": "https://github.com/JordanNewell/curtis-acp/issues"
+	},
 	"type": "module",
 	"main": "dist/index.js",
 	"bin": {

@@ -1,0 +1,29 @@
+name: Publish (npm provenance)
+
+# Publishes to npm with a Sigstore provenance attestation: the tarball is
+# cryptographically bound (via GitHub OIDC) to this repo and workflow run.
+# Trigger: cut a GitHub Release (or push a vX.Y.Z tag).
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write # OIDC token — required for --provenance
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:mock
+      - run: npm run test:persist
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
