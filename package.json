@@ -1,6 +1,6 @@
 {
 	"name": "curtis-acp",
-	"version": "0.4.2",
+	"version": "0.4.3",
 	"description": "Curtis AI as an ACP agent — polyglot LLM access (53 providers) with the multi-model arena, inside Zed and any ACP client.",
 	"repository": {
 		"type": "git",
