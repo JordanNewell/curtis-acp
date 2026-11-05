@@ -30,14 +30,7 @@
 		"test:mock": "node test/client.mjs",
 		"test:persist": "node test/persist.mjs"
 	},
-	"keywords": [
-		"acp",
-		"agent-client-protocol",
-		"zed",
-		"llm",
-		"arena",
-		"byok"
-	],
+	"keywords": ["acp", "agent-client-protocol", "zed", "llm", "arena", "byok"],
 	"license": "BUSL-1.1",
 	"dependencies": {
 		"@zed-industries/agent-client-protocol": "^0.4.5"
